@@ -1,0 +1,38 @@
+version: '3.7'
+services:
+  php:
+    container_name: photo_verification-php-fpm
+    build:
+      context: .
+      dockerfile: ./docker/fpm.Dockerfile
+    volumes:
+        - .:/usr/share/nginx/html
+    links:
+        - postgres
+  web:
+    image: nginx:latest
+    container_name: photo_verification-nginx
+    ports:
+        - "8084:80"
+    volumes:
+        - .:/usr/share/nginx/html
+        - ./docker/site.conf:/etc/nginx/conf.d/site.conf
+    links:
+        - php
+  postgres:
+    image: postgres:14
+    container_name: photo_verification-db
+    restart: always
+    shm_size: 1gb
+    volumes: []
+    build: {}
+    environment:
+      POSTGRES_DB: "${DB_DATABASE}"
+      POSTGRES_USER: "${DB_USERNAME}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD}"
+      POSTGRES_PORT: "${DB_PORT}"
+      PGDATA: ${PGDATA:-/postgres}
+    expose:
+      - "${DB_PORT}"
+    ports:
+      - "${DB_LOCAL_PORT}:${DB_PORT}"
